@@ -2,10 +2,12 @@
 
 A Snake game, but also like TRON
 
+done:
+  functional, single player snake game
+  
 to-do:
-  make a functional single player Snake game
+  add power ups
 
 future:
   add an AI snake
-  add power ups
-    (ideas?)
+  more ideas for future things?
