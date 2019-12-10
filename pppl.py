@@ -156,8 +156,8 @@ class bluesnake(object):
         self.color = color
         self.head = cube(pos)
         self.body.append(self.head)
-        self.dirnx = 0
-        self.dirny = 1
+        self.dirnx = 5
+        self.dirny = 5
 
     def move(self):
         for event in pygame.event.get():
@@ -253,7 +253,7 @@ def main():
     rows = 50
     win = pygame.display.set_mode((width, width))
     s = snake((255,0,0), (10,10))
-		blu = bluesnake((0,0,255), (10,10))
+    blu = bluesnake((0,0,255), (10,10))
     snack = cube(randomSnack(rows, s), color=(0,255,0))
     flag = True
 
