@@ -1,0 +1,303 @@
+import random, pygame
+import tkinter as tk
+from tkinter import messagebox
+
+pygame.init()
+
+def text_format(message, textFont, textSize, textColor):
+    newFont=pygame.font.Font(textFont, textSize)
+    newText=newFont.render(message, 0, textColor)
+ 
+    return newText
+
+font = "Retro.ttf"
+
+class cube(object):
+    rows = 50
+    w = 500
+    def __init__(self,start,dirnx=1,dirny=0,color=(255,0,0)):
+        self.pos = start
+        self.dirnx = 1
+        self.dirny = 0
+        self.color = color
+
+        
+    def move(self, dirnx, dirny):
+        self.dirnx = dirnx
+        self.dirny = dirny
+        self.pos = (self.pos[0] + self.dirnx, self.pos[1] + self.dirny)
+
+    def draw(self, surface):
+        dis = self.w // self.rows
+        i = self.pos[0]
+        j = self.pos[1]
+
+        pygame.draw.rect(surface, self.color, (i*dis+1,j*dis+1, dis-2, dis-2))
+
+
+
+
+class snake(object):
+    body = []
+    turns = {}
+    def __init__(self, color, pos):
+        self.color = color
+        self.head = cube(pos)
+        self.body.append(self.head)
+        self.dirnx = 0
+        self.dirny = 1
+        
+    def move(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+            keys = pygame.key.get_pressed()
+
+            for key in keys:
+                if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+                    self.dirnx = -1
+                    self.dirny = 0
+                    self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+
+                elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+                    self.dirnx = 1
+                    self.dirny = 0
+                    self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+
+                elif keys[pygame.K_UP] or keys[pygame.K_w]:
+                    self.dirnx = 0
+                    self.dirny = -1
+                    self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+
+                elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+                    self.dirnx = 0
+                    self.dirny = 1
+                    self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+
+        for i, c in enumerate(self.body):
+            p = c.pos[:]
+            if p in self.turns:
+                turn = self.turns[p]
+                c.move(turn[0],turn[1])
+                if i == len(self.body)-1:
+                    self.turns.pop(p)
+            else:
+                if c.dirnx == -1 and c.pos[0] <= 0: c.pos = (c.rows-1, c.pos[1])
+                elif c.dirnx == 1 and c.pos[0] >= c.rows-1: c.pos = (0,c.pos[1])
+                elif c.dirny == 1 and c.pos[1] >= c.rows-1: c.pos = (c.pos[0], 0)
+                elif c.dirny == -1 and c.pos[1] <= 0: c.pos = (c.pos[0],c.rows-1)
+                else: c.move(c.dirnx,c.dirny)
+        
+
+    def reset(self, pos):
+        self.head = cube(pos)
+        self.body = []
+        self.body.append(self.head)
+        self.turns = {}
+        self.dirnx = 0
+        self.dirny = 1
+
+
+    def addCube(self):
+        tail = self.body[-1]
+        dx, dy = tail.dirnx, tail.dirny
+
+        if dx == 1 and dy == 0:
+            self.body.append(cube((tail.pos[0]-1,tail.pos[1])))
+        elif dx == -1 and dy == 0:
+            self.body.append(cube((tail.pos[0]+1,tail.pos[1])))
+        elif dx == 0 and dy == 1:
+            self.body.append(cube((tail.pos[0],tail.pos[1]-1)))
+        elif dx == 0 and dy == -1:
+            self.body.append(cube((tail.pos[0],tail.pos[1]+1)))
+
+        self.body[-1].dirnx = dx
+        self.body[-1].dirny = dy
+        
+
+    def draw(self, surface):
+        for i, c in enumerate(self.body):
+            if i ==0:
+                c.draw(surface)
+            else:
+                c.draw(surface)
+
+
+def redrawWindow(surface):
+    global width, rows, s,b, food, extra, zoom
+    surface.fill((0,0,0))
+    s.draw(surface)
+    b.draw(surface)
+    food.draw(surface)
+    extra.draw(surface)
+    zoom.draw(surface)
+
+    pygame.display.update()
+
+
+def randomSnack(rows, item):
+
+    positions = item.body
+
+    while True:
+        x = random.randrange(rows)
+        y = random.randrange(rows)
+        if len(list(filter(lambda z:z.pos == (x,y), positions))) > 0:
+            continue
+        else:
+            break
+        
+    return (x,y)
+
+
+def message_box(subject, content):
+    root = tk.Tk()
+    root.attributes("-topmost", True)
+    root.withdraw()
+    messagebox.showinfo(subject, content)
+    try:
+        root.destroy()
+    except:
+        pass
+
+
+def game():
+    global width, rows, s, food, extra, zoom
+    width = 500
+    rows = 50
+    win = pygame.display.set_mode((width, width))
+    pygame.display.set_caption("Project Hydra | Singleplayer")
+    s = snake((255,0,0), (10,10))
+    b = snake((0,155,155), (0,15))
+    food = cube(randomSnack(rows, s), color=(0,255,0))
+    extra = cube((-1,-1), color=(0,0,255))
+    zoom = cube((-1,-1), color=(255,255,255))
+
+
+    
+    flag = True
+    speedtime = 0
+    clock = pygame.time.Clock()
+    speed = 10
+    
+    while flag:
+        pygame.time.delay(50)
+        clock.tick(speed)
+        speed = 10
+        s.move()
+        b.move()
+        if s.body[0].pos == food.pos:
+            s.addCube()
+            food = cube(randomSnack(rows, s), color=(0,255,0))
+            if random.randint(1,6) == 6:
+                extra = cube(randomSnack(rows, s), color=(0,0,255))
+            if random. randint(1,10) == 10:
+                zoom = cube(randomSnack(rows, s), color=(255,255,255))
+        if s.body[0].pos == extra.pos:
+            s.addCube()
+            s.addCube()
+            s.addCube()
+            extra = cube((-1,-1), color=(0,0,255))
+        if s.body[0].pos == zoom.pos:
+            speedtime = 50
+            zoom = cube((-1,-1), color=(255,255,255))
+        if speedtime > 0:
+            speed = 50
+            speedtime -= 1
+        redrawWindow(win)
+        for x in range(len(s.body)):
+            if s.body[x].pos in list(map(lambda z:z.pos,s.body[x+1:])):
+                print('Score: ', len(s.body))
+                message_box('You died!', 'Back to main menu.')
+                flag = False
+                
+        if b.body[0].pos == food.pos:
+            b.addCube()
+            food = cube(randomSnack(rows, b), color=(0,255,0))
+            if random.randint(1,6) == 6:
+                extra = cube(randomSnack(rows, b), color=(0,0,255))
+            if random. randint(1,10) == 10:
+                zoom = cube(randomSnack(rows, b), color=(255,255,255))
+        if b.body[0].pos == extra.pos:
+            b.addCube()
+            b.addCube()
+            b.addCube()
+            extra = cube((-1,-1), color=(0,0,255))
+        if b.body[0].pos == zoom.pos:
+            speedtime = 50
+            zoom = cube((-1,-1), color=(255,255,255))
+        if speedtime > 0:
+            speed = 50
+            speedtime -= 1
+        redrawWindow(win)
+    s.body.clear()
+    b.body.clear()
+    main_menu()
+
+def main_menu():
+    global font
+    width = 500
+    screen = pygame.display.set_mode((width, width))
+    menu=True
+    selected="single"
+ 
+    clock = pygame.time.Clock()
+    while menu:
+        for event in pygame.event.get():
+            if event.type==pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type==pygame.KEYDOWN:
+                if event.key==pygame.K_UP and (selected == "multi" or selected == "single"):
+                    selected = "single"
+                elif event.key==pygame.K_DOWN and selected == "single":
+                    selected = "multi"
+                elif event.key==pygame.K_DOWN and selected == "multi":
+                    selected = "quit"
+                elif event.key==pygame.K_UP and selected == "quit":
+                    selected = "multi"
+                if event.key==pygame.K_RETURN:
+                    if selected == "single":
+                        game()
+                    if selected == "multi":
+                        print("Not available yet")
+                    if selected == "quit":
+                        pygame.quit()
+                        quit()
+ 
+        # Main Menu UI
+        screen.fill((0,0,0))
+        title=text_format("Project Hydra", font, 90, (255,255,0))
+        if selected =="single":
+            text_0 = text_format("Singleplayer", font, 75, (255,255,255))
+        else:
+            text_0 = text_format("Singleplayer", font, 75, (120,120,120))
+        
+        if selected == "multi":
+            text_1 = text_format("Multiplayer", font, 75, (255,255,255))
+        else:
+            text_1 = text_format("Multiplayer", font, 75, (120,120,120))
+        
+        if selected =="quit":
+            text_2 = text_format("QUIT", font, 75, (255,255,255))
+        else:
+            text_2 = text_format("QUIT", font, 75, (120,120,120))
+ 
+        title_rect = title.get_rect()
+        single_rect = text_0.get_rect()
+        multi_rect = text_1.get_rect()
+        quit_rect = text_2.get_rect()
+ 
+        # Main Menu Text
+        screen.blit(title, (width/2 - (title_rect[2]/2), 80))
+        screen.blit(text_0, (width/2 - (single_rect[2]/2), 300))
+        screen.blit(text_1, (width/2 - (multi_rect[2]/2), 360))
+        screen.blit(text_2, (width/2 - (quit_rect[2]/2), 420))
+        pygame.display.update()
+        clock.tick(10)
+        pygame.display.set_caption("Project Hydra | Main Menu")
+
+main_menu()
+pygame.quit()
+quit()
