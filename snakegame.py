@@ -31,12 +31,13 @@ class cube(object):
 class snake(object):
     body = []
     turns = {}
-    def __init__(self, color, pos):
+    def __init__(self, color, pos, player):
         self.color = color
         self.head = cube(pos)
         self.body.append(self.head)
         self.dirnx = 0
         self.dirny = 1
+        self.player = player
 
     def move(self):
         for event in pygame.event.get():
@@ -44,27 +45,51 @@ class snake(object):
                 pygame.quit()
 
             keys = pygame.key.get_pressed()
+            if self.player == 1:
+                for key in keys:
+                    if keys[pygame.K_LEFT]:
+                        self.dirnx = -1
+                        self.dirny = 0
+                        self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
 
-            for key in keys:
-                if keys[pygame.K_LEFT]:
-                    self.dirnx = -1
-                    self.dirny = 0
-                    self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+                    elif keys[pygame.K_RIGHT]:
+                        self.dirnx = 1
+                        self.dirny = 0
+                        self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
 
-                elif keys[pygame.K_RIGHT]:
-                    self.dirnx = 1
-                    self.dirny = 0
-                    self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+                    elif keys[pygame.K_UP]:
+                        self.dirnx = 0
+                        self.dirny = -1
+                        self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
 
-                elif keys[pygame.K_UP]:
-                    self.dirnx = 0
-                    self.dirny = -1
-                    self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+                    elif keys[pygame.K_DOWN]:
+                        self.dirnx = 0
+                        self.dirny = 1
+                        self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+            
+            else:
+              for key in keys:
+                    if keys[pygame.K_a]:
+                        self.dirnx = -1
+                        self.dirny = 0
+                        self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
 
-                elif keys[pygame.K_DOWN]:
-                    self.dirnx = 0
-                    self.dirny = 1
-                    self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+                    elif keys[pygame.K_d]:
+                        self.dirnx = 1
+                        self.dirny = 0
+                        self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+
+                    elif keys[pygame.K_w]:
+                        self.dirnx = 0
+                        self.dirny = -1
+                        self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+
+                    elif keys[pygame.K_s]:
+                        self.dirnx = 0
+                        self.dirny = 1
+                        self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+            
+                        
 
         for i, c in enumerate(self.body):
             p = c.pos[:]
@@ -155,7 +180,9 @@ def main():
     width = 500
     rows = 50
     win = pygame.display.set_mode((width, width))
-    s = snake((255,0,0), (10,10))
+    s = snake((255,0,0,), (10,10), 1)
+    b = snake((255,0,255,), (0,15), 2)
+
     snack = cube(randomSnack(rows, s), color=(0,255,0))
     flag = True
 
@@ -165,6 +192,7 @@ def main():
         pygame.time.delay(50)
         clock.tick(10)
         s.move()
+        b.move()
         if s.body[0].pos == snack.pos:
             s.addCube()
             snack = cube(randomSnack(rows, s), color=(0,255,0))
